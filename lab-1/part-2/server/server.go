@@ -28,6 +28,7 @@ func acceptConns(ln net.Listener, conns chan net.Conn) {
 	for {
 		conn, err := ln.Accept()
 		handleError(err)
+		fmt.Println("New client connected from", conn.RemoteAddr())
 		conns <- conn
 	}
 }
@@ -43,9 +44,10 @@ func handleClient(client net.Conn, clientid int, msgs chan Message) {
 		msg, err := reader.ReadString('\n')
 
 		if err != nil {
+			fmt.Println("Client", clientid, "disconnected")
 			break
 		}
-
+		fmt.Printf("Recieved from client %d: %s", clientid, msg)
 		message := Message{
 			sender:  clientid,
 			message: msg,
@@ -64,6 +66,7 @@ func main() {
 	//TODO Create a Listener for TCP connections on the port given above.
 	ln, err := net.Listen("tcp", *portPtr)
 	handleError(err)
+	fmt.Println("Server running on port", *portPtr)
 
 	//Create a channel for connections
 	conns := make(chan net.Conn)
@@ -90,7 +93,7 @@ func main() {
 		case msg := <-msgs:
 			//TODO Deal with a new message
 			// Send the message to all clients that aren't the sender
-
+			fmt.Printf("Broadcasting messafe from client %d: %s", msg.sender, msg.message)
 			for i, client := range clients {
 				if msg.sender != i {
 					fmt.Fprintf(client, msg.message)
